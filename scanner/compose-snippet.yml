@@ -1,0 +1,39 @@
+# docker-compose.yml changes for LINUX Docker hosts
+# (For Windows/Mac Docker Desktop, use windows-scanner/ instead — see
+#  scanner/SETUP_LINUX.md vs windows-scanner/SETUP_STEPS_WINDOWS.md)
+
+# 1) Add a "ports:" entry to your existing mysql-server service so the
+#    host-networked scanner container can reach it via 127.0.0.1:
+#
+#   mysql-server:
+#     image: mysql:8.0
+#     ...
+#     ports:
+#       - "127.0.0.1:3306:3306"     # <-- ADD THIS LINE
+#     ...
+
+# 2) Add this new service alongside your existing ones:
+  ipam-scanner:
+    build:
+      context: ./scanner
+      dockerfile: Dockerfile
+    container_name: ipam-scanner
+    network_mode: host          # real LAN/ARP access — native Linux only
+    depends_on:
+      - mysql-server
+    environment:
+      DB_HOST: 127.0.0.1        # host-networked, so localhost == the Docker host
+      DB_PORT: 3306
+      DB_NAME: zabbix
+      DB_USER: zabbix
+      DB_PASSWORD: iqlab@2025
+      POLL_INTERVAL_SECONDS: 5
+    cap_add:
+      - NET_RAW
+      - NET_ADMIN
+    restart: unless-stopped
+
+# No "networks:" block needed — network_mode: host bypasses Docker's
+# virtual networking entirely, which is exactly what gives it real ARP
+# access on native Linux (this does NOT work the same way on Docker
+# Desktop for Windows/Mac — use the windows-scanner/ native approach there).
