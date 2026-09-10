@@ -18,11 +18,10 @@ another container alongside Zabbix.
 ---
 
 ## What's in this folder
-
 ```
-ipam-module-linux/
+zabbix-docker/
 ├── modules/ipampro/           The Zabbix frontend module (PHP)
-│   └── sql/schema.sql         Database tables this module needs
+│             └── sql/schema.sql         Database tables this module needs
 └── scanner/                   The background scanning service
     ├── scan_daemon.py         Polls for scan requests, runs nmap, saves results
     ├── Dockerfile              Builds the scanner into a container image
@@ -65,16 +64,8 @@ hosts (this is why there's a separate Windows edition).
 All commands below are run from the same directory as your
 `docker-compose.yml`.
 
-### 1. Copy the module in
 
-```bash
-cp -r /path/to/ipam-module-linux/modules ./modules
-```
-
-You should now have `./modules/ipampro/` sitting next to your
-`docker-compose.yml`.
-
-### 2. Mount the module into `zabbix-web`
+### 1. Mount the module into `zabbix-web`
 
 Your `zabbix-web` service needs to see that folder. Add this line to
 `zabbix-web`'s `volumes:` list in `docker-compose.yml`:
@@ -99,21 +90,25 @@ Apply it:
 docker compose up -d zabbix-web
 ```
 
-### 3. Apply the module's database schema
+### 2. Apply the module's database schema
 
 The module needs its own tables in the `zabbix` database. Copy the
 schema file into the MySQL container and run it:
 
 ```bash
-docker cp modules/ipampro/sql/schema.sql mysql-server:/tmp/schema.sql
-docker exec -i mysql-server sh -c "mysql -u zabbix -p'iqlab@2025' zabbix < /tmp/schema.sql"
+sudo docker cp modules/ipampro/sql/schema.sql mysql-server:/tmp/schema.sql
+sudo docker exec -i mysql-server sh -c "mysql -u zabbix -p'iqlab@2025' zabbix < /tmp/schema.sql"
 ```
 
 Confirm it worked:
 ```bash
-docker exec -i mysql-server sh -c "mysql -u zabbix -p'iqlab@2025' zabbix -e \"SHOW TABLES LIKE 'ipam_scan_queue';\""
+sudo docker exec -i mysql-server sh -c "mysql -u zabbix -p'iqlab@2025' zabbix -e \"SHOW TABLES LIKE 'ipam_scan_queue';\""
 ```
 You should see one row back: `ipam_scan_queue`.
+### 3. Give permission to ipampro Folder
+
+sudo chown -R 1997:1995 ./ipampro
+sudo chmod -R 775 ./ipampro
 
 ### 4. Enable the module inside Zabbix
 
