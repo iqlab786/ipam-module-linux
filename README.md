@@ -107,9 +107,9 @@ sudo docker exec -i mysql-server sh -c "mysql -u zabbix -p'iqlab@2025' zabbix -e
 You should see one row back: `ipam_scan_queue`.
 ### 3. Give permission to ipampro Folder
 
-sudo chown -R 1997:1995 ./ipampro
+  sudo chown -R 1997:1995 ./ipampro
 
-sudo chmod -R 775 ./ipampro
+  sudo chmod -R 775 ./ipampro
 
 ### 4. Enable the module inside Zabbix
 
